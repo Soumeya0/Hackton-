@@ -1,0 +1,9 @@
+{
+    "C_Cpp.default.compilerPath": "/usr/bin/clang",
+    "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+    "files.associations": {
+        "traffic.light.h": "c"
+    },
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.runInTerminal": true
+}
