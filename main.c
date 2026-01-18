@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>  // Add for exit()
-#include <signal.h>  // Add for signal handling
+#include <stdlib.h>
+#include <signal.h>
 #include "traffic.light.h"
 
 // Signal handler for cleanup
@@ -11,22 +11,37 @@ void handle_signal(int sig) {
     exit(0);
 }
 
-void printStateInfo(enum TrafficLight state) {
+void printStateInfo(TrafficLight state) {
     switch(state) {
         case Red:
-            printf("🚦 Current: RED (Should switch to GREEN after %d seconds)\n", RED_DURATION);
+            printf("🔴 Current: RED ");
+            if (pedestrian_requested) {
+                printf("(Pedestrian waiting - will cross soon)\n");
+            } else {
+                printf("(Switch to GREEN in %d seconds)\n", RED_DURATION - timer);
+            }
             break;
         case Yellow:
-            printf("🚦 Current: YELLOW (Should switch to RED after %d seconds)\n", YELLOW_DURATION);
+            printf("🟡 Current: YELLOW ");
+            if (acceleration_mode) {
+                printf("⏩ ACCELERATED ");
+            }
+            printf("(Switch to RED in %d seconds)\n", YELLOW_DURATION - timer);
             break;
         case Green:
-            printf("🚦 Current: GREEN (Should switch to YELLOW after %d seconds)\n", GREEN_DURATION);
+            printf("🟢 Current: GREEN ");
+            if (acceleration_mode) {
+                printf("⏩ ACCELERATED ");
+            }
+            printf("(Switch to YELLOW in %d seconds)\n", GREEN_DURATION - timer);
             break;
         case PedestrianCrossing:
-            printf("🚶 Current: PEDESTRIAN CROSSING (%d seconds)\n", PEDESTRIAN_CROSSING_DURATION);
+            printf("🚶 Current: PEDESTRIAN CROSSING ");
+            printf("(Ends in %d seconds)\n", PEDESTRIAN_CROSSING_DURATION - timer);
             break;
-        case blinking_yellow:
-            printf("🚦 Current: BLINKING YELLOW (%d seconds)\n", BLINKING_YELLOW_DURATION);
+        case BlinkingRed:
+            printf("🚑 Current: EMERGENCY VEHICLE ");
+            printf("(Blinking Red - Ends in %d seconds)\n", BLINKING_RED_DURATION - timer);
             break;
     }
 }
@@ -43,38 +58,50 @@ int main() {
     printf("Initializing GPIO...\n");
     init_gpio();
     
-    printf("Durations: RED=%ds, YELLOW=%ds, GREEN=%ds\n", 
-           RED_DURATION, YELLOW_DURATION, GREEN_DURATION);
-    printf("Special: Pedestrian=%ds, Blink modes=%ds\n\n",
-           PEDESTRIAN_CROSSING_DURATION, BLINKING_YELLOW_DURATION);
-    printf("GPIO Pins: RED=%d, YELLOW=%d, GREEN=%d, PEDESTRIAN=%d\n\n",
-           RED_PIN, YELLOW_PIN, GREEN_PIN, PED_PIN);
+    printf("\n=== HARDWARE CONFIGURATION ===\n");
+    printf("Traffic Lights:\n");
+    printf("  🔴 RED:     GPIO %d\n", RED_PIN);
+    printf("  🟡 YELLOW:  GPIO %d\n", YELLOW_PIN);
+    printf("  🟢 GREEN:   GPIO %d\n", GREEN_PIN);
+    printf("Pedestrian Button: GPIO %d (Pull-up, active LOW)\n\n", PED_BUTTON_PIN);
+    
+    printf("=== TIMING CONFIGURATION ===\n");
+    printf("Normal Cycle:\n");
+    printf("  GREEN:  %d seconds\n", GREEN_DURATION);
+    printf("  YELLOW: %d seconds\n", YELLOW_DURATION);
+    printf("  RED:    %d seconds\n", RED_DURATION);
+    
+    printf("\nAccelerated Cycle (when button pressed):\n");
+    printf("  GREEN:  %d seconds\n", ACCELERATED_GREEN_DURATION);
+    printf("  YELLOW: %d seconds\n", ACCELERATED_YELLOW_DURATION);
+    printf("  RED:    %d seconds\n", ACCELERATED_RED_DURATION);
+    
+    printf("\nSpecial Modes:\n");
+    printf("  Pedestrian Crossing: %d seconds\n", PEDESTRIAN_CROSSING_DURATION);
+    printf("  Emergency Vehicle:   %d seconds (Blinking Red)\n\n", BLINKING_RED_DURATION);
+    
+    printf("=== HOW IT WORKS ===\n");
+    printf("1. Press button (GPIO %d) or 'p' key\n", PED_BUTTON_PIN);
+    printf("2. Current light phase ACCELERATES to reach RED faster\n");
+    printf("3. At RED light, pedestrian crossing begins\n");
+    printf("4. Pedestrians see RED light (cars stopped) for %d seconds\n", PEDESTRIAN_CROSSING_DURATION);
+    printf("5. Press 'e' anytime for emergency vehicle mode\n");
+    printf("================================\n\n");
     
     // Clear input buffer
     int c;
     while((c = getchar()) != EOF && c != '\n');
     
-    int debug_mode = 0;  // 0 = normal, 1 = debug
-    int consecutive_reds = 0;
-    enum TrafficLight last_state = Red;
+    int debug_mode = 0;
+    TrafficLight last_state = Red;
+    TrafficLight current_state = get_current_state();
     
     // Set initial state
     set_traffic_light(current_state);
     
     while(1) {
         update_traffic_light();
-        enum TrafficLight state = get_current_state();
-        
-        // Check if stuck in RED
-        if (state == Red) {
-            consecutive_reds++;
-            if (consecutive_reds > RED_DURATION + 5) {  // Allow some buffer
-                printf("\n⚠️  WARNING: Might be stuck in RED state!\n");
-                printf("   Last state was: %d, Timer might not be resetting\n", last_state);
-            }
-        } else {
-            consecutive_reds = 0;
-        }
+        TrafficLight state = get_current_state();
         
         last_state = state;
         
@@ -83,17 +110,16 @@ int main() {
             printStateInfo(state);
         }
         
-        printf("\nOptions: p=pedestrian, e=emergency q=quit, Enter=next\n");
+        printf("\n[Button:GPIO%d] Options: p=pedestrian, e=emergency, q=quit, Enter=next\n", PED_BUTTON_PIN);
         printf("> ");
         
         char input;
         if (scanf("%c", &input) != EOF) {
             if (input == 'p') {
                 request_pedestrian_crossing();
-                printf("✓ Pedestrian crossing requested (will activate at next RED)\n");
             } else if (input == 'e') {
                 detect_emergency_vehicle();
-                printf("⚠️ Emergency vehicle detected! Overriding normal cycle.\n");
+                printf("⚠️  Emergency vehicle detected!\n");
             } else if (input == 'q') {
                 printf("Exiting simulation...\n");
                 cleanup_gpio();

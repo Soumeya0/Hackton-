@@ -1,36 +1,52 @@
 #ifndef TRAFFIC_LIGHT_H 
 #define TRAFFIC_LIGHT_H 
 
-// Add GPIO pin definitions
-#define RED_PIN     0     // GPIO 17 (wiringPi pin 0)
-#define YELLOW_PIN  1     // GPIO 18 (wiringPi pin 1)
-#define GREEN_PIN   2     // GPIO 27 (wiringPi pin 2)
-#define PED_PIN     3     // GPIO 22 (wiringPi pin 3) - Pedestrian signal
+// GPIO pin definitions
+#define RED_PIN         17    // GPIO 17
+#define YELLOW_PIN      27    // GPIO 27
+#define GREEN_PIN       22    // GPIO 22
+#define PED_BUTTON_PIN  23    // GPIO 23 (Pedestrian request button)
 
-enum TrafficLight { 
+// Traffic light states
+typedef enum TrafficLight { 
     Red, 
     Yellow, 
     Green, 
-    PedestrianCrossing, 
-    blinking_yellow 
-}; 
+    PedestrianCrossing,  // Pedestrians can cross
+    BlinkingRed          // For emergency vehicles only
+} TrafficLight;
 
-#define GREEN_DURATION 10
-#define YELLOW_DURATION 10 
-#define RED_DURATION 10 
-#define BLINKING_YELLOW_DURATION 5
+// Timing constants
+#define GREEN_DURATION          10
+#define YELLOW_DURATION         10 
+#define RED_DURATION            10 
 #define PEDESTRIAN_CROSSING_DURATION 8
+#define BLINKING_RED_DURATION   5
+
+// Accelerated timings (when button is pressed)
+#define ACCELERATED_GREEN_DURATION   2
+#define ACCELERATED_YELLOW_DURATION  2
+#define ACCELERATED_RED_DURATION     2
+
+// Button debounce time in milliseconds
+#define BUTTON_DEBOUNCE_MS 50
 
 // Function prototypes
 void update_traffic_light(void);
-int get_current_state(void);
+TrafficLight get_current_state(void);
 void request_pedestrian_crossing(void);
 void detect_emergency_vehicle(void);
-enum TrafficLight getNextState(enum TrafficLight current_state);
+TrafficLight getNextState(TrafficLight current_state);
+void check_pedestrian_button(void);
 
 // GPIO functions
 void init_gpio(void);
-void set_traffic_light(enum TrafficLight state);
+void set_traffic_light(TrafficLight state);
 void cleanup_gpio(void);
+
+// External variables (for main.c access)
+extern int timer;
+extern int acceleration_mode;
+extern int pedestrian_requested;
 
 #endif // TRAFFIC_LIGHT_H
