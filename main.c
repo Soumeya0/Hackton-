@@ -14,7 +14,7 @@ void handle_signal(int sig) {
 void printStateInfo(TrafficLight state) {
     switch(state) {
         case Red:
-            printf("🔴 Current: RED ");
+            printf("Current: RED ");
             if (pedestrian_requested) {
                 printf("(Pedestrian waiting - will cross soon)\n");
             } else {
@@ -22,25 +22,25 @@ void printStateInfo(TrafficLight state) {
             }
             break;
         case Yellow:
-            printf("🟡 Current: YELLOW ");
+            printf("Current: YELLOW ");
             if (acceleration_mode) {
-                printf("⏩ ACCELERATED ");
+                printf("ACCELERATED ");
             }
             printf("(Switch to RED in %d seconds)\n", YELLOW_DURATION - timer);
             break;
         case Green:
-            printf("🟢 Current: GREEN ");
+            printf("Current: GREEN ");
             if (acceleration_mode) {
-                printf("⏩ ACCELERATED ");
+                printf("ACCELERATED ");
             }
             printf("(Switch to YELLOW in %d seconds)\n", GREEN_DURATION - timer);
             break;
         case PedestrianCrossing:
-            printf("🚶 Current: PEDESTRIAN CROSSING ");
+            printf("Current: PEDESTRIAN CROSSING ");
             printf("(Ends in %d seconds)\n", PEDESTRIAN_CROSSING_DURATION - timer);
             break;
         case BlinkingRed:
-            printf("🚑 Current: EMERGENCY VEHICLE ");
+            printf("Current: EMERGENCY VEHICLE ");
             printf("(Blinking Red - Ends in %d seconds)\n", BLINKING_RED_DURATION - timer);
             break;
     }
@@ -60,9 +60,9 @@ int main() {
     
     printf("\n=== HARDWARE CONFIGURATION ===\n");
     printf("Traffic Lights:\n");
-    printf("  🔴 RED:     GPIO %d\n", RED_PIN);
-    printf("  🟡 YELLOW:  GPIO %d\n", YELLOW_PIN);
-    printf("  🟢 GREEN:   GPIO %d\n", GREEN_PIN);
+    printf("  RED:     GPIO %d\n", RED_PIN);
+    printf("  YELLOW:  GPIO %d\n", YELLOW_PIN);
+    printf("  GREEN:   GPIO %d\n", GREEN_PIN);
     printf("Pedestrian Button: GPIO %d (Pull-up, active LOW)\n\n", PED_BUTTON_PIN);
     
     printf("=== TIMING CONFIGURATION ===\n");
@@ -119,7 +119,7 @@ int main() {
                 request_pedestrian_crossing();
             } else if (input == 'e') {
                 detect_emergency_vehicle();
-                printf("⚠️  Emergency vehicle detected!\n");
+                printf("Emergency vehicle detected!\n");
             } else if (input == 'q') {
                 printf("Exiting simulation...\n");
                 cleanup_gpio();
