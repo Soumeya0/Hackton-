@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>  // Add for exit()
+#include <signal.h>  // Add for signal handling
 #include "traffic.light.h"
+
+// Signal handler for cleanup
+void handle_signal(int sig) {
+    printf("\nReceived signal %d, cleaning up...\n", sig);
+    cleanup_gpio();
+    exit(0);
+}
 
 void printStateInfo(enum TrafficLight state) {
     switch(state) {
@@ -23,14 +32,23 @@ void printStateInfo(enum TrafficLight state) {
 }
 
 int main() {
+    // Set up signal handling for clean exit
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+    
     printf("================================\n");
     printf("   TRAFFIC LIGHT SIMULATION\n");
     printf("================================\n\n");
+    
+    printf("Initializing GPIO...\n");
+    init_gpio();
     
     printf("Durations: RED=%ds, YELLOW=%ds, GREEN=%ds\n", 
            RED_DURATION, YELLOW_DURATION, GREEN_DURATION);
     printf("Special: Pedestrian=%ds, Blink modes=%ds\n\n",
            PEDESTRIAN_CROSSING_DURATION, BLINKING_YELLOW_DURATION);
+    printf("GPIO Pins: RED=%d, YELLOW=%d, GREEN=%d, PEDESTRIAN=%d\n\n",
+           RED_PIN, YELLOW_PIN, GREEN_PIN, PED_PIN);
     
     // Clear input buffer
     int c;
@@ -39,6 +57,9 @@ int main() {
     int debug_mode = 0;  // 0 = normal, 1 = debug
     int consecutive_reds = 0;
     enum TrafficLight last_state = Red;
+    
+    // Set initial state
+    set_traffic_light(current_state);
     
     while(1) {
         update_traffic_light();
@@ -75,6 +96,7 @@ int main() {
                 printf("⚠️ Emergency vehicle detected! Overriding normal cycle.\n");
             } else if (input == 'q') {
                 printf("Exiting simulation...\n");
+                cleanup_gpio();
                 break;
             }
         }
