@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "traffic_light.h"
-#include <wiringPi.h>   
+#include <gpio_qnx.h>   
 
 // Define variables (also declared in header)
 int timer = 0;
