@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
-#include "traffic.light.h"
+#include "traffic_light.h"
 
 // Signal handler for cleanup
 void handle_signal(int sig) {
