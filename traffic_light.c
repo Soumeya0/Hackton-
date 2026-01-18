@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <time.h>
-#include "traffic.light.h"
+#include "traffic_light.h"
 #include <wiringPi.h>   
 
 // Define variables (also declared in header)
