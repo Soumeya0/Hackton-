@@ -89,7 +89,7 @@ void check_pedestrian_button(void) {
         if (current_time - last_button_press > BUTTON_DEBOUNCE_MS) {
             if (!pedestrian_requested && current_state != PedestrianCrossing) {
                 pedestrian_requested = 1;
-                printf("✅ Button pressed! Accelerating to RED for pedestrian crossing\n");
+                printf("Button pressed! Accelerating to RED for pedestrian crossing\n");
                 
                 // Enter acceleration mode
                 acceleration_mode = 1;
@@ -126,13 +126,13 @@ void request_pedestrian_crossing(void) {
     if (!pedestrian_requested && current_state != PedestrianCrossing) {
         pedestrian_requested = 1;
         acceleration_mode = 1;
-        printf("✅ Keyboard request! Accelerating to RED for pedestrian crossing\n");
+        printf("Keyboard request! Accelerating to RED for pedestrian crossing\n");
     }
 }
 
 void detect_emergency_vehicle(void) {
     emergency_vehicle_detected = 1;
-    printf("🚑 Emergency vehicle detected!\n");
+    printf("Emergency vehicle detected!\n");
 }
 
 TrafficLight getNextState(TrafficLight current) {
@@ -163,7 +163,7 @@ void update_traffic_light(void) {
     
     // Handle emergency vehicle override (can interrupt any state)
     if (emergency_vehicle_detected) {
-        printf("🚑 EMERGENCY: Switching to Blinking Red mode\n");
+        printf("EMERGENCY: Switching to Blinking Red mode\n");
         current_state = BlinkingRed;
         emergency_vehicle_detected = 0;
         pedestrian_requested = 0;
@@ -188,7 +188,7 @@ void update_traffic_light(void) {
             current_state = Red;
             timer = 0;
             set_traffic_light(current_state);
-            printf("🚑→🔴 Emergency mode ended, back to normal Red\n");
+            printf("Emergency mode ended, back to normal Red\n");
         }
         return;
     }
@@ -201,14 +201,14 @@ void update_traffic_light(void) {
             acceleration_mode = 0;
             timer = 0;
             set_traffic_light(current_state);
-            printf("🚶→🟢 Pedestrian crossing ended, switching to Green\n");
+            printf(" Pedestrian crossing ended, switching to Green\n");
         }
         return;
     }
     
     // Check if we should start pedestrian crossing (must be at Red)
     if (pedestrian_requested && current_state == Red) {
-        printf("🚶 Starting pedestrian crossing phase\n");
+        printf(" Starting pedestrian crossing phase\n");
         current_state = PedestrianCrossing;
         pedestrian_requested = 0;
         pedestrian_active = 1;
@@ -231,9 +231,9 @@ void update_traffic_light(void) {
                 timer = 0;
                 set_traffic_light(current_state);
                 if (acceleration_mode) {
-                    printf("⏩🟢→🟡 Accelerated: Switching from Green to Yellow\n");
+                    printf("Accelerated: Switching from Green to Yellow\n");
                 } else {
-                    printf("🟢→🟡 Switching from Green to Yellow\n");
+                    printf("Switching from Green to Yellow\n");
                 }
             }
             break;
@@ -244,9 +244,9 @@ void update_traffic_light(void) {
                 timer = 0;
                 set_traffic_light(current_state);
                 if (acceleration_mode) {
-                    printf("⏩🟡→🔴 Accelerated: Switching from Yellow to Red\n");
+                    printf(" Accelerated: Switching from Yellow to Red\n");
                 } else {
-                    printf("🟡→🔴 Switching from Yellow to Red\n");
+                    printf(" Switching from Yellow to Red\n");
                 }
             }
             break;
@@ -258,7 +258,7 @@ void update_traffic_light(void) {
                 timer = 0;
                 acceleration_mode = 0;  // Reset acceleration
                 set_traffic_light(current_state);
-                printf("🔴→🟢 Switching from Red to Green\n");
+                printf("Switching from Red to Green\n");
             }
             // If pedestrian_requested is true, we'll catch it at the next cycle
             break;
